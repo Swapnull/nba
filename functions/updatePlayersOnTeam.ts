@@ -1,8 +1,34 @@
 import { UpdatePlayersOnTeam, permissions, models } from "@teamkeel/sdk";
 import axios from "axios";
 import { DateTime } from "luxon";
+import {
+  Venue,
+  GenericNameAlias,
+  Coach,
+  TeamColour,
+  Player,
+} from "../types/sportRadar";
 
-const getRoster = async (teamId: string) => {
+interface SportRadarProfileResponse {
+  id: string;
+  name: string;
+  market: string;
+  alias: string;
+  founded: number;
+  sr_id: string;
+  reference: string;
+  venue: Venue;
+  league: GenericNameAlias;
+  conference: GenericNameAlias;
+  division: GenericNameAlias;
+  coaches: Array<Coach>;
+  team_colors: Array<TeamColour>;
+  players: Array<Player>;
+}
+
+async function getRoster(
+  teamId: string
+): Promise<SportRadarProfileResponse | null> {
   try {
     const { data } = await axios.get(
       `http://api.sportradar.us/nba/trial/v8/en/teams/${teamId}/profile.json?api_key=${process.env.SPORTRADAR_API_KEY}`
@@ -10,8 +36,9 @@ const getRoster = async (teamId: string) => {
     return data;
   } catch (e) {
     console.log(e.message, e.response.data);
+    return null;
   }
-};
+}
 
 export default UpdatePlayersOnTeam(async (ctx, inputs) => {
   permissions.allow();
@@ -28,6 +55,8 @@ export default UpdatePlayersOnTeam(async (ctx, inputs) => {
     if (!team) throw new Error("Team not found");
 
     const roster = await getRoster(team.externalId);
+
+    if (!roster) throw new Error("Roster not found");
 
     if (!team.alias) {
       await models.team.update({ id: team.id }, { alias: roster.alias });
@@ -46,7 +75,7 @@ export default UpdatePlayersOnTeam(async (ctx, inputs) => {
           height: player.height,
           weight: player.weight,
           jersey: player.jersey_number,
-          birthDate: player.birthdate,
+          birthDate: DateTime.fromISO(player.birthdate).toJSDate(),
           highSchool: player.high_school,
           college: player.college,
           status: player.status,
@@ -66,13 +95,13 @@ export default UpdatePlayersOnTeam(async (ctx, inputs) => {
               teamId: team.id,
               playerId: newPlayer.id,
               year: player.draft.year,
-              round: player.draft.round,
-              pick: player.draft.pick,
+              round: parseInt(player.draft.round),
+              pick: parseInt(player.draft.pick),
             });
           }
         }
 
-        return player.name;
+        return player.full_name;
       })
     );
   }

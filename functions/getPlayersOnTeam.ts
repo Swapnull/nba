@@ -1,6 +1,4 @@
 import { GetPlayersOnTeam, permissions, models, Player } from "@teamkeel/sdk";
-import axios from "axios";
-import { DateTime } from "luxon";
 
 export default GetPlayersOnTeam(async (ctx, inputs) => {
   permissions.allow();

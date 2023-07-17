@@ -1,12 +1,27 @@
 import { UpdateTeams, permissions, models } from "@teamkeel/sdk";
 import axios from "axios";
+import { GenericNameAlias, Team } from "../types/sportRadar";
 
-const getTeams = async () => {
+interface SportRadarRankingResponse {
+  league: GenericNameAlias;
+  season: {
+    id: string;
+    year: number;
+    type: "REG" | "PST";
+  };
+  conferences: Array<
+    GenericNameAlias & {
+      divisions: Array<GenericNameAlias & { teams: Array<Team> }>;
+    }
+  >;
+}
+
+async function getTeams(): Promise<SportRadarRankingResponse> {
   const { data } = await axios.get(
     `http://api.sportradar.us/nba/trial/v8/en/seasons/2022/REG/rankings.json?api_key=${process.env.SPORTRADAR_API_KEY}`
   );
   return data;
-};
+}
 
 export default UpdateTeams(async (ctx, inputs) => {
   permissions.allow();
@@ -21,7 +36,6 @@ export default UpdateTeams(async (ctx, inputs) => {
             division.teams.map(async (team) => {
               const teamData = {
                 name: `${team.market} ${team.name}`,
-                alias: team.alias,
                 conference: conference.alias,
                 division: division.alias,
               };
