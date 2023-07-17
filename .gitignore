@@ -20,3 +20,4 @@ dist-ssr
 
 # Keel
 .build
+.env

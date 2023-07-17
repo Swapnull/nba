@@ -1,8 +1,8 @@
 {
   "name": "exampleProject",
   "dependencies": {
-    "@teamkeel/functions-runtime": "^0.351.0",
-    "@teamkeel/testing-runtime": "^0.351.0",
+    "@teamkeel/functions-runtime": "^0.355.0",
+    "@teamkeel/testing-runtime": "^0.355.0",
     "@types/luxon": "^3.3.0",
     "@types/node": "^18.11.18",
     "axios": "^1.4.0",
